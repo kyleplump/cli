@@ -43,8 +43,12 @@ module Hanami
             fs.create("Procfile.dev", t("procfile.erb", context))
             fs.create("config.ru", t("config_ru.erb", context))
 
-            fs.create("bin/dev", file("dev"))
-            fs.chmod("bin/dev", 0o755)
+            if ::Gem.win_platform?
+              fs.write("bin/dev.cmd", file("dev.cmd")) if ::Gem.win_platform?
+            else
+              fs.create("bin/dev", file("dev"))
+              fs.chmod("bin/dev", 0o755)
+            end
 
             fs.create("config/app.rb", t("app.erb", context))
             fs.create("config/settings.rb", t("settings.erb", context))

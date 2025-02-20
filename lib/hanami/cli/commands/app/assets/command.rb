@@ -82,13 +82,20 @@ module Hanami
             # @since 2.1.0
             # @api private
             def fork_child_assets_command(slice)
-              Process.fork do
-                cmd, *args = assets_command(slice)
-                system_call.call(cmd, *args, out_prefix: "[#{slice.slice_name}] ")
-              rescue Interrupt
-                # When this has been interrupted (by the Signal.trap handler in #call), catch the
-                # interrupt and exit cleanly, without showing the default full backtrace.
-              end
+              if Process.respond_to?(:fork)
+                Process.fork do
+                  cmd, *args = assets_command(slice)
+                  system_call.call(cmd, *args, out_prefix: "[#{slice.slice_name}] ")
+                rescue Interrupt
+                  # When this has been interrupted (by the Signal.trap handler in #call), catch the
+                  # interrupt and exit cleanly, without showing the default full backtrace.
+                end
+              else
+                Thread.new do
+                  cmd, *args = assets_command(slice)
+                  system_call.call(cmd, *args, out_prefix: "[#{slice.slice_name}] ")
+                end
+              end   
             end
 
             # @since 2.1.0
